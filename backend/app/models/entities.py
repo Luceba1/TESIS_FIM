@@ -114,6 +114,7 @@ class FileChange(SQLModel, table=True):
     new_md5: str = ""
     size_bytes: int = 0
     detected_at: datetime = Field(default_factory=utc_now)
+    reviewed_at: Optional[datetime] = None
     review_status: ChangeReviewStatus = Field(default=ChangeReviewStatus.PENDING)
     webhook_status: WebhookStatus = Field(default=WebhookStatus.PENDING)
     webhook_error: str = ""

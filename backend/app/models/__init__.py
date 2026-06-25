@@ -12,6 +12,7 @@ from app.models.entities import (
     ScanRun,
     ScanStatus,
     WebhookStatus,
+    utc_now,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "ScanRun",
     "ScanStatus",
     "WebhookStatus",
+    "utc_now",
 ]

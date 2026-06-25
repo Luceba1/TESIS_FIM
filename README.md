@@ -217,3 +217,24 @@ Respond: Using 'Respond to Webhook' Node
 ```
 
 El botón **Probar conexión** envía un payload de prueba con `type: TEST`. Los eventos reales envían un payload con `type: FILE_INTEGRITY_EVENT`, incluyendo entorno, criticidad, archivo, ruta, hashes, fecha de detección y estado de revisión.
+
+## Métricas MTTD y MTTR
+
+Esta versión incorpora métricas de desempeño para la defensa de la tesis:
+
+- **MTTD (Mean Time To Detect):** tiempo promedio entre el inicio del escaneo y el registro del evento detectado. En el prototipo permite estimar la velocidad de detección del motor FIM.
+- **MTTR (Mean Time To Review/Respond):** tiempo promedio entre la detección del evento y su revisión por parte del usuario. Se calcula cuando el evento pasa de `PENDING` a `REVIEWED`, `IGNORED` o `FALSE_POSITIVE`.
+
+La tabla `file_changes` ahora incluye el campo `reviewed_at`. Si la base de datos ya existía, el backend aplica una migración liviana al iniciar:
+
+```sql
+ALTER TABLE file_changes ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+```
+
+El CSV de evidencia también exporta:
+
+- `revisado_en`
+- `mttd_segundos`
+- `mttr_segundos`
+
+Esto permite documentar tiempos de detección y respuesta en los anexos del trabajo.

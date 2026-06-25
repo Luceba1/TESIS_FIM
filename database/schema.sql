@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS file_changes (
     new_md5 TEXT NOT NULL DEFAULT '',
     size_bytes BIGINT NOT NULL DEFAULT 0,
     detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    reviewed_at TIMESTAMPTZ,
     review_status VARCHAR NOT NULL DEFAULT 'PENDING',
     webhook_status VARCHAR NOT NULL DEFAULT 'PENDING',
     webhook_error TEXT NOT NULL DEFAULT ''

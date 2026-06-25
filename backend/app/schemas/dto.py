@@ -90,6 +90,9 @@ class FileChangeRead(BaseModel):
     new_md5: str
     size_bytes: int
     detected_at: datetime
+    reviewed_at: datetime | None = None
+    detection_time_seconds: float | None = None
+    response_time_seconds: float | None = None
     review_status: ChangeReviewStatus
     webhook_status: WebhookStatus
     webhook_error: str
@@ -133,3 +136,5 @@ class MetricsRead(BaseModel):
     last_scan_at: datetime | None
     last_scan_status: str | None
     agent_last_seen_at: datetime | None
+    average_mttd_seconds: float | None = None
+    average_mttr_seconds: float | None = None

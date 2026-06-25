@@ -31,6 +31,18 @@ function formatDate(value?: string | null) {
   return new Date(value).toLocaleString("es-AR");
 }
 
+function formatDuration(seconds?: number | null) {
+  if (seconds === null || seconds === undefined) return "Sin datos";
+  if (seconds < 1) return "< 1s";
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const restSeconds = Math.round(seconds % 60);
+  if (minutes < 60) return `${minutes}m ${restSeconds}s`;
+  const hours = Math.floor(minutes / 60);
+  const restMinutes = minutes % 60;
+  return `${hours}h ${restMinutes}m`;
+}
+
 function fileName(path: string) {
   return path.split(/[\\/]/).pop() || path;
 }
@@ -317,6 +329,8 @@ function App() {
         <StatCard title="Archivos activos" value={metrics?.active_files ?? "-"} icon={<Database />} hint="En línea base" />
         <StatCard title="Eventos hoy" value={metrics?.events_today ?? "-"} icon={<BellRing />} hint={`${metrics?.pending_events ?? 0} pendientes`} />
         <StatCard title="Escaneos hoy" value={metrics?.scans_today ?? "-"} icon={<RefreshCcw />} hint={metrics?.last_scan_status ?? "Sin datos"} />
+        <StatCard title="MTTD promedio" value={formatDuration(metrics?.average_mttd_seconds)} icon={<Clock3 />} hint="Inicio de escaneo → detección" />
+        <StatCard title="MTTR promedio" value={formatDuration(metrics?.average_mttr_seconds)} icon={<CheckCircle2 />} hint="Detección → revisión" />
       </section>
 
       <section className="grid two-columns top-gap">
@@ -469,6 +483,7 @@ function App() {
                 <div className="file-cell">
                   <strong>{fileName(change.path)}</strong>
                   <small>{formatDate(change.detected_at)}</small>
+                  <small>MTTD: {formatDuration(change.detection_time_seconds)}</small>
                 </div>
                 <div>
                   <strong>{change.environment_name}</strong>
@@ -553,6 +568,9 @@ function App() {
               <div><span>Entorno</span><strong>{selectedChange.environment_name}</strong></div>
               <div><span>Criticidad</span><strong>{selectedChange.environment_criticality}</strong></div>
               <div><span>Detectado</span><strong>{formatDate(selectedChange.detected_at)}</strong></div>
+              <div><span>Revisado</span><strong>{formatDate(selectedChange.reviewed_at)}</strong></div>
+              <div><span>MTTD</span><strong>{formatDuration(selectedChange.detection_time_seconds)}</strong></div>
+              <div><span>MTTR</span><strong>{formatDuration(selectedChange.response_time_seconds)}</strong></div>
               <div><span>Scan run</span><strong>#{selectedChange.scan_run_id}</strong></div>
               <div><span>Webhook</span><strong>{formatStatus(selectedChange.webhook_status)}</strong></div>
               <div><span>Tamaño</span><strong>{selectedChange.size_bytes} bytes</strong></div>
