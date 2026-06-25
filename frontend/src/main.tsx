@@ -15,9 +15,10 @@ import {
   ShieldAlert,
   ShieldCheck,
   Square,
+  Download,
   X,
 } from "lucide-react";
-import { api, AgentStatus, Environment, FileChange, Metrics, MonitoredPath } from "./api/client";
+import { api, API_URL, AgentStatus, Environment, FileChange, Metrics, MonitoredPath } from "./api/client";
 import "./styles.css";
 
 const criticalities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
@@ -220,6 +221,37 @@ function App() {
     });
   }
 
+  async function exportEvidence() {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams();
+      if (selectedEnvironmentId !== "all") params.set("environment_id", String(selectedEnvironmentId));
+      if (eventTypeFilter !== "all") params.set("event_type", eventTypeFilter);
+      if (reviewFilter !== "all") params.set("review_status", reviewFilter);
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const response = await fetch(`${API_URL}/changes/export${query}`);
+      if (!response.ok) throw new Error(await response.text() || "No se pudo exportar la evidencia");
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition") ?? "";
+      const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+      const filename = match?.[1] ?? `watchdogs_fim_evidencia_${new Date().toISOString().slice(0, 10)}.csv`;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ocurrió un error al exportar evidencia");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
   async function startAgent() {
     await safeAction(async () => {
       await api("/agent/start", { method: "POST" });
@@ -376,7 +408,7 @@ function App() {
             <div className="bar deleted-bar" style={{ width: `${((metrics?.deleted_events ?? 0) / totalEvents) * 100}%` }}></div>
           </div>
 
-          <div className="filter-grid">
+          <div className="filter-grid events-tools">
             <select value={eventTypeFilter} onChange={(e) => setEventTypeFilter(e.target.value)}>
               <option value="all">Todos los eventos</option>
               <option value="CREATED">Creados</option>
@@ -387,6 +419,9 @@ function App() {
               <option value="all">Todos los estados</option>
               {reviewStatuses.map((status) => <option key={status} value={status}>{formatStatus(status)}</option>)}
             </select>
+            <button onClick={exportEvidence} disabled={loading} className="export-button">
+              <Download size={18} /> Exportar evidencia CSV
+            </button>
           </div>
 
           <div className="table event-table">

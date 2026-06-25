@@ -184,3 +184,8 @@ logs/watchdogs_backend.log
 ```
 
 Para la tesis, esta solución representa la etapa de prototipo. Como trabajo futuro se propone crear un instalador `.exe` que registre el agente como Servicio de Windows.
+
+
+## Exportación de evidencia
+
+El panel de eventos incluye un botón **Exportar evidencia CSV**. La exportación respeta los filtros activos de entorno, tipo de evento y estado de revisión, e incluye datos útiles para anexos de la tesis: entorno, criticidad, tipo de evento, ruta completa, hashes anteriores/nuevos, fecha de detección, estado de revisión, scan asociado y estado del webhook.
