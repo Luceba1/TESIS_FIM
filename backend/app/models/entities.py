@@ -24,6 +24,7 @@ class ChangeReviewStatus(str, Enum):
     PENDING = "PENDING"
     REVIEWED = "REVIEWED"
     IGNORED = "IGNORED"
+    FALSE_POSITIVE = "FALSE_POSITIVE"
 
 
 class ScanStatus(str, Enum):

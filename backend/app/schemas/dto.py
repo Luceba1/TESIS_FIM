@@ -86,6 +86,8 @@ class FileChangeRead(BaseModel):
     event_type: EventType
     old_sha256: str
     new_sha256: str
+    old_md5: str
+    new_md5: str
     size_bytes: int
     detected_at: datetime
     review_status: ChangeReviewStatus
@@ -120,6 +122,10 @@ class MetricsRead(BaseModel):
     active_files: int
     events_today: int
     pending_events: int
+    reviewed_events: int
+    ignored_events: int
+    false_positive_events: int
+    scans_today: int
     created_events: int
     modified_events: int
     deleted_events: int

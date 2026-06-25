@@ -27,6 +27,10 @@ def get_metrics(session: Session) -> dict:
     active_files = count(session, select(func.count()).select_from(FileHash).where(FileHash.status == FileStatus.ACTIVE))
     events_today = count(session, select(func.count()).select_from(FileChange).where(FileChange.detected_at >= today_start))
     pending_events = count(session, select(func.count()).select_from(FileChange).where(FileChange.review_status == "PENDING"))
+    reviewed_events = count(session, select(func.count()).select_from(FileChange).where(FileChange.review_status == "REVIEWED"))
+    ignored_events = count(session, select(func.count()).select_from(FileChange).where(FileChange.review_status == "IGNORED"))
+    false_positive_events = count(session, select(func.count()).select_from(FileChange).where(FileChange.review_status == "FALSE_POSITIVE"))
+    scans_today = count(session, select(func.count()).select_from(ScanRun).where(ScanRun.started_at >= today_start))
     created_events = count(session, select(func.count()).select_from(FileChange).where(FileChange.event_type == EventType.CREATED))
     modified_events = count(session, select(func.count()).select_from(FileChange).where(FileChange.event_type == EventType.MODIFIED))
     deleted_events = count(session, select(func.count()).select_from(FileChange).where(FileChange.event_type == EventType.DELETED))
@@ -50,6 +54,10 @@ def get_metrics(session: Session) -> dict:
         "active_files": active_files,
         "events_today": events_today,
         "pending_events": pending_events,
+        "reviewed_events": reviewed_events,
+        "ignored_events": ignored_events,
+        "false_positive_events": false_positive_events,
+        "scans_today": scans_today,
         "created_events": created_events,
         "modified_events": modified_events,
         "deleted_events": deleted_events,

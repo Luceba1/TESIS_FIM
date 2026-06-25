@@ -23,6 +23,10 @@ export type Metrics = {
   active_files: number;
   events_today: number;
   pending_events: number;
+  reviewed_events: number;
+  ignored_events: number;
+  false_positive_events: number;
+  scans_today: number;
   created_events: number;
   modified_events: number;
   deleted_events: number;
@@ -59,18 +63,22 @@ export type MonitoredPath = {
 export type FileChange = {
   id: number;
   environment_id: number;
+  monitored_path_id: number;
+  scan_run_id: number;
   environment_name: string;
   environment_criticality: string;
   path: string;
   event_type: "CREATED" | "MODIFIED" | "DELETED";
   old_sha256: string;
   new_sha256: string;
+  old_md5: string;
+  new_md5: string;
+  size_bytes: number;
   detected_at: string;
-  review_status: string;
+  review_status: "PENDING" | "REVIEWED" | "IGNORED" | "FALSE_POSITIVE" | string;
   webhook_status: string;
   webhook_error: string;
 };
-
 
 export type AgentStatus = {
   running: boolean;
