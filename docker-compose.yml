@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: watchdogs_fim_postgres
+    environment:
+      POSTGRES_USER: fim_user
+      POSTGRES_PASSWORD: fim_password
+      POSTGRES_DB: watchdogs_fim
+    ports:
+      - "5432:5432"
+    volumes:
+      - watchdogs_fim_pgdata:/var/lib/postgresql/data
+
+volumes:
+  watchdogs_fim_pgdata:
