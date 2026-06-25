@@ -16,9 +16,11 @@ import {
   ShieldCheck,
   Square,
   Download,
+  Send,
+  Wifi,
   X,
 } from "lucide-react";
-import { api, API_URL, AgentStatus, Environment, FileChange, Metrics, MonitoredPath } from "./api/client";
+import { api, API_URL, AgentStatus, Environment, FileChange, Metrics, MonitoredPath, WebhookIntegrationStatus } from "./api/client";
 import "./styles.css";
 
 const criticalities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
@@ -48,6 +50,7 @@ function formatStatus(status: string) {
     SENT: "Enviado",
     FAILED: "Falló",
     OK: "Correcto",
+    TEST: "Prueba",
     ERROR: "Error",
   };
   return labels[status] ?? status;
@@ -101,6 +104,8 @@ function App() {
   const [newEnvironmentCriticality, setNewEnvironmentCriticality] = useState("HIGH");
   const [newPath, setNewPath] = useState("");
   const [webhook, setWebhook] = useState("");
+  const [webhookStatus, setWebhookStatus] = useState<WebhookIntegrationStatus | null>(null);
+  const [webhookTestMessage, setWebhookTestMessage] = useState("");
   const [agentStatus, setAgentStatus] = useState<AgentStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -120,19 +125,21 @@ function App() {
 
   async function loadData() {
     const query = selectedEnvironmentId === "all" ? "" : `?environment_id=${selectedEnvironmentId}`;
-    const [metricsData, environmentsData, pathsData, changesData, webhookData, agentData] = await Promise.all([
+    const [metricsData, environmentsData, pathsData, changesData, webhookData, agentData, webhookStatusData] = await Promise.all([
       api<Metrics>("/metrics"),
       api<Environment[]>("/environments"),
       api<MonitoredPath[]>(`/paths${query}`),
       api<FileChange[]>(`/changes${query}`),
       api<{ value: string }>("/settings/webhook"),
       api<AgentStatus>("/agent/status"),
+      api<WebhookIntegrationStatus>("/settings/webhook/status"),
     ]);
     setMetrics(metricsData);
     setEnvironments(environmentsData);
     setPaths(pathsData);
     setChanges(changesData);
     setWebhook(webhookData.value ?? "");
+    setWebhookStatus(webhookStatusData);
     setAgentStatus(agentData);
   }
 
@@ -211,6 +218,29 @@ function App() {
         method: "PUT",
         body: JSON.stringify({ value: webhook }),
       });
+      setWebhookTestMessage("Webhook guardado correctamente.");
+    });
+  }
+
+  async function testWebhook() {
+    await safeAction(async () => {
+      const result = await api<{ ok: boolean; message: string; status: string; error?: string }>("/settings/webhook/test", { method: "POST" });
+      setWebhookTestMessage(result.ok ? result.message : `${result.message} ${result.error ?? ""}`);
+    });
+  }
+
+  async function retryFailedWebhooks() {
+    await safeAction(async () => {
+      const result = await api<{ retried: number }>("/settings/webhook/retry-failed", { method: "POST" });
+      setWebhookTestMessage(`Eventos reenviados a n8n: ${result.retried}`);
+    });
+  }
+
+  async function retrySelectedWebhook(change: FileChange) {
+    await safeAction(async () => {
+      const updated = await api<FileChange>(`/changes/${change.id}/webhook/retry`, { method: "POST" });
+      setSelectedChange(updated);
+      setWebhookTestMessage(`Evento #${change.id} reenviado a n8n.`);
     });
   }
 
@@ -476,9 +506,27 @@ function App() {
           </div>
 
           <div className="webhook-box">
-            <label>Webhook n8n</label>
-            <input value={webhook} onChange={(e) => setWebhook(e.target.value)} placeholder="https://.../webhook/..." />
-            <button onClick={saveWebhook} disabled={loading}>Guardar webhook</button>
+            <div className="webhook-title-row">
+              <label>Webhook n8n</label>
+              <span className={`badge ${webhookStatus?.configured ? "active" : "disabled"}`}>
+                {webhookStatus?.configured ? "Configurado" : "No configurado"}
+              </span>
+            </div>
+            <input value={webhook} onChange={(e) => setWebhook(e.target.value)} placeholder="http://localhost:5678/webhook-test/watchdogs-alert" />
+            <div className="actions webhook-actions">
+              <button onClick={saveWebhook} disabled={loading}>Guardar webhook</button>
+              <button onClick={testWebhook} disabled={loading || !webhook.trim()} className="secondary">Probar conexión</button>
+              <button onClick={retryFailedWebhooks} disabled={loading || !webhookStatus?.failed_events} className="secondary">Reenviar fallidos</button>
+            </div>
+
+            <div className="webhook-status-grid">
+              <div><span>Última prueba</span><strong>{formatStatus(webhookStatus?.last_test_status || "-")}</strong></div>
+              <div><span>Fecha prueba</span><strong>{formatDate(webhookStatus?.last_test_at)}</strong></div>
+              <div><span>Último envío real</span><strong>{formatDate(webhookStatus?.last_sent_at)}</strong></div>
+              <div><span>Fallidos</span><strong>{webhookStatus?.failed_events ?? 0}</strong></div>
+            </div>
+            {webhookStatus?.last_test_error && <div className="error-box compact-error">{webhookStatus.last_test_error}</div>}
+            {webhookTestMessage && <div className="success-box compact-success">{webhookTestMessage}</div>}
           </div>
 
           <div className="review-summary">
@@ -536,6 +584,14 @@ function App() {
 
             {selectedChange.webhook_error && (
               <div className="error-box compact-error">{selectedChange.webhook_error}</div>
+            )}
+
+            {(selectedChange.webhook_status === "FAILED" || selectedChange.webhook_status === "NOT_CONFIGURED") && (
+              <div className="modal-actions">
+                <button onClick={() => retrySelectedWebhook(selectedChange)} disabled={loading} className="secondary">
+                  <RefreshCcw size={16} /> Reenviar a n8n
+                </button>
+              </div>
             )}
 
             <div className="modal-actions">

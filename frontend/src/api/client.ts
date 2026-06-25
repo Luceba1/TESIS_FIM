@@ -90,3 +90,36 @@ export type AgentStatus = {
   last_error: string;
   interval_seconds: number;
 };
+
+export type WebhookIntegrationStatus = {
+  configured: boolean;
+  url: string;
+  last_test_at: string;
+  last_test_status: string;
+  last_test_error: string;
+  last_sent_at: string;
+  last_error_at: string;
+  failed_events: number;
+  not_configured_events: number;
+};
+
+export type WebhookStatusRead = {
+  configured: boolean;
+  url: string;
+  last_test_at: string;
+  last_test_status: string;
+  last_test_error: string;
+  last_sent_at: string;
+  last_error_at: string;
+  failed_events: number;
+  not_configured_events: number;
+};
+
+export type WebhookTestResult = {
+  ok: boolean;
+  status: string;
+  message: string;
+  sent_at?: string;
+  http_status?: number;
+  error?: string;
+};

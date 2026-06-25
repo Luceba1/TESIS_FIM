@@ -3,7 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "path": "watchdogs-fim",
+        "httpMethod": "POST",
+        "path": "watchdogs-alert",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -19,7 +20,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={ { \"received\": true, \"environment_name\": $json.environment_name, \"event_type\": $json.event_type, \"path\": $json.path, \"message\": $json.message } }"
+        "responseBody": "={ { \"ok\": true, \"received\": true, \"source\": $json.source, \"type\": $json.type, \"environment_name\": $json.environment_name || null, \"event_type\": $json.event_type || null, \"message\": $json.message } }"
       },
       "id": "Respond",
       "name": "Responder OK",

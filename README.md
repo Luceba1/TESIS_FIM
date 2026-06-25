@@ -189,3 +189,31 @@ Para la tesis, esta solución representa la etapa de prototipo. Como trabajo fut
 ## Exportación de evidencia
 
 El panel de eventos incluye un botón **Exportar evidencia CSV**. La exportación respeta los filtros activos de entorno, tipo de evento y estado de revisión, e incluye datos útiles para anexos de la tesis: entorno, criticidad, tipo de evento, ruta completa, hashes anteriores/nuevos, fecha de detección, estado de revisión, scan asociado y estado del webhook.
+
+## Integración n8n mejorada
+
+El panel permite configurar la URL del webhook de n8n, probar la conexión y reenviar eventos que hayan fallado.
+
+Endpoints útiles:
+
+```txt
+GET  /api/v1/settings/webhook
+PUT  /api/v1/settings/webhook
+GET  /api/v1/settings/webhook/status
+POST /api/v1/settings/webhook/test
+POST /api/v1/settings/webhook/retry-failed
+```
+
+Flujo recomendado en n8n:
+
+```txt
+Webhook (POST) → Respond to Webhook
+```
+
+En el nodo Webhook, configurar la respuesta como:
+
+```txt
+Respond: Using 'Respond to Webhook' Node
+```
+
+El botón **Probar conexión** envía un payload de prueba con `type: TEST`. Los eventos reales envían un payload con `type: FILE_INTEGRITY_EVENT`, incluyendo entorno, criticidad, archivo, ruta, hashes, fecha de detección y estado de revisión.

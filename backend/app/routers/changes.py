@@ -8,6 +8,7 @@ from sqlmodel import Session, select
 from app.core.db import get_session
 from app.models import ChangeReviewStatus, Environment, EventType, FileChange
 from app.schemas import FileChangeRead
+from app.services.notifier import retry_change_webhook
 
 router = APIRouter(prefix="/changes", tags=["Eventos detectados"])
 
@@ -118,4 +119,12 @@ def review_change(change_id: int, status: ChangeReviewStatus, session: Session =
     session.add(change)
     session.commit()
     session.refresh(change)
+    return change_to_read(session, change)
+
+
+@router.post("/{change_id}/webhook/retry", response_model=FileChangeRead)
+def retry_change_webhook_route(change_id: int, session: Session = Depends(get_session)):
+    change = retry_change_webhook(session, change_id)
+    if not change:
+        raise HTTPException(status_code=404, detail="Evento no encontrado")
     return change_to_read(session, change)
