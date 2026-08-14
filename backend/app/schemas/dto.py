@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 from app.models import ChangeReviewStatus, Criticality, EventType, FileStatus, ScanStatus, WebhookStatus
@@ -67,10 +68,22 @@ class FileHashRead(BaseModel):
     environment_id: int
     monitored_path_id: int
     path: str
+
+    # Línea base aprobada.
     sha256: str
     md5: str
     size_bytes: int
     last_modified: datetime
+    baseline_approved: bool
+    baseline_approved_at: datetime | None
+
+    # Último estado observado.
+    observed_sha256: str
+    observed_md5: str
+    observed_size_bytes: int
+    observed_last_modified: datetime | None
+    last_seen_at: datetime | None
+
     status: FileStatus
     updated_at: datetime
 
@@ -88,11 +101,21 @@ class FileChangeRead(BaseModel):
     new_sha256: str
     old_md5: str
     new_md5: str
+    baseline_sha256: str
+    baseline_md5: str
+    baseline_match: bool | None
     size_bytes: int
+    occurred_at: datetime | None = None
+    occurred_at_source: str
     detected_at: datetime
     reviewed_at: datetime | None = None
+
+    # MTTD real cuando existe una referencia temporal del evento.
     detection_time_seconds: float | None = None
+    # Latencia interna del escaneo, separada del MTTD.
+    scan_processing_time_seconds: float | None = None
     response_time_seconds: float | None = None
+
     review_status: ChangeReviewStatus
     webhook_status: WebhookStatus
     webhook_error: str
@@ -102,15 +125,22 @@ class FileChangeRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class EventTimeUpdate(BaseModel):
+    occurred_at: datetime
+    source: str = "EXPERIMENT_CONTROLLED"
+
+
 class ScanRunRead(BaseModel):
     id: int
     environment_id: int | None
     started_at: datetime
     finished_at: datetime | None
     files_checked: int
+    files_skipped: int
     changes_found: int
     status: ScanStatus
     error_message: str
+    warning_message: str
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -137,4 +167,7 @@ class MetricsRead(BaseModel):
     last_scan_status: str | None
     agent_last_seen_at: datetime | None
     average_mttd_seconds: float | None = None
+    average_scan_processing_seconds: float | None = None
     average_mttr_seconds: float | None = None
+    mttd_sample_count: int = 0
+    mttd_missing_count: int = 0

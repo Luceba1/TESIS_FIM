@@ -218,23 +218,55 @@ Respond: Using 'Respond to Webhook' Node
 
 El botón **Probar conexión** envía un payload de prueba con `type: TEST`. Los eventos reales envían un payload con `type: FILE_INTEGRITY_EVENT`, incluyendo entorno, criticidad, archivo, ruta, hashes, fecha de detección y estado de revisión.
 
-## Métricas MTTD y MTTR
+## Métricas MTTD, latencia de escaneo y MTTR
 
-Esta versión incorpora métricas de desempeño para la defensa de la tesis:
+Las métricas temporales se separan para evitar confundir constructos distintos:
 
-- **MTTD (Mean Time To Detect):** tiempo promedio entre el inicio del escaneo y el registro del evento detectado. En el prototipo permite estimar la velocidad de detección del motor FIM.
-- **MTTR (Mean Time To Review/Respond):** tiempo promedio entre la detección del evento y su revisión por parte del usuario. Se calcula cuando el evento pasa de `PENDING` a `REVIEWED`, `IGNORED` o `FALSE_POSITIVE`.
+- **MTTD (Mean Time To Detect):** tiempo entre `occurred_at` (referencia temporal del cambio) y `detected_at` (persistencia del evento). Para `CREATED` y `MODIFIED` el motor puede usar el `mtime` del archivo como aproximación. En pruebas controladas se recomienda reemplazar esa referencia por una marca temporal externa registrada por el script experimental. En `DELETED`, el instante de borrado no puede reconstruirse a posteriori mediante sondeo periódico, por lo que queda sin MTTD hasta asociar una marca experimental.
+- **Latencia interna del escaneo:** tiempo entre `scan_runs.started_at` y `file_changes.detected_at`. Esta métrica describe el procesamiento del ciclo, pero **no se presenta como MTTD**.
+- **MTTR (Mean Time To Review/Respond):** tiempo entre la detección y la primera acción de revisión documentada mediante el panel.
 
-La tabla `file_changes` ahora incluye el campo `reviewed_at`. Si la base de datos ya existía, el backend aplica una migración liviana al iniciar:
+El dashboard informa además cuántos eventos tienen una referencia temporal válida para MTTD y cuántos quedan sin ella. El CSV exporta `ocurrido_en`, `fuente_tiempo_evento`, `mttd_segundos`, `latencia_escaneo_segundos` y `mttr_segundos`.
 
-```sql
-ALTER TABLE file_changes ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+## Línea base aprobada vs. estado observado
+
+Una detección ya no modifica automáticamente la línea base. En `file_hashes`:
+
+- `sha256`, `md5`, `size_bytes` y `last_modified` representan la **línea base aprobada**.
+- `observed_sha256`, `observed_md5`, `observed_size_bytes` y `observed_last_modified` representan el **último estado observado**.
+
+Un archivo nuevo detectado durante el monitoreo se registra con `baseline_approved=false`; genera evidencia, pero no queda legitimado como referencia hasta una aprobación explícita. Para aprobar el estado observado de un archivo:
+
+```txt
+POST /api/v1/baseline/{file_hash_id}/approve-current
 ```
 
-El CSV de evidencia también exporta:
+`POST /api/v1/baseline/generate` continúa siendo la operación explícita para generar o regenerar una línea base a partir del estado actual.
 
-- `revisado_en`
-- `mttd_segundos`
-- `mttr_segundos`
+## Tolerancia a fallas por archivo
 
-Esto permite documentar tiempos de detección y respuesta en los anexos del trabajo.
+Un archivo bloqueado, una subcarpeta sin permisos o un archivo que cambia durante el hashing ya no abortan necesariamente el ciclo completo. El motor:
+
+1. reintenta la lectura si detecta que tamaño o `mtime` cambiaron mientras calculaba los hashes;
+2. registra archivos omitidos y advertencias en `scan_runs`;
+3. marca el escaneo como `PARTIAL` cuando corresponde;
+4. evita inferir `DELETED` si la enumeración de una ruta fue incompleta.
+
+## Medición experimental controlada
+
+Para asociar una marca temporal externa a un evento ya detectado:
+
+```txt
+PATCH /api/v1/changes/{change_id}/event-time
+```
+
+Payload:
+
+```json
+{
+  "occurred_at": "2026-08-11T04:30:00.123Z",
+  "source": "EXPERIMENT_CONTROLLED"
+}
+```
+
+El script `scripts/run_experiment_event.ps1` automatiza una operación `CREATED`, `MODIFIED` o `DELETED`, espera a que aparezca el evento correspondiente y adjunta la marca temporal controlada. Esto permite medir MTTD con una referencia externa reproducible, especialmente para eliminaciones.

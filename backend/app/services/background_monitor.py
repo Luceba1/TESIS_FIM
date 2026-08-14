@@ -97,7 +97,11 @@ class BackgroundMonitor:
                     self.last_scan_at = datetime.now(timezone.utc)
                     self.last_scan_id = scan.id
                     self.last_status = scan.status.value
-                    self.last_message = f"Último escaneo #{scan.id}: {scan.status.value}, archivos: {scan.files_checked}, cambios: {scan.changes_found}"
+                    self.last_message = (
+                        f"Último escaneo #{scan.id}: {scan.status.value}, "
+                        f"archivos: {scan.files_checked}, omitidos: {scan.files_skipped}, "
+                        f"cambios: {scan.changes_found}"
+                    )
                     self.last_error = scan.error_message or ""
                     self._update_heartbeat(session, "ACTIVE", self.last_message)
             except Exception as exc:  # defensive: monitoring should not kill the API

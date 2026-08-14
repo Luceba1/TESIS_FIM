@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from datetime import datetime, timezone
 
 from app.core.config import get_settings
+from app.core.time_utils import iso_utc
 from app.models import AppSetting, Environment, FileChange, WebhookStatus
 
 
@@ -66,7 +67,11 @@ def build_change_payload(session: Session, change: FileChange) -> dict:
         "old_md5": change.old_md5,
         "new_md5": change.new_md5,
         "size_bytes": change.size_bytes,
-        "detected_at": change.detected_at.isoformat(),
+        "occurred_at": iso_utc(change.occurred_at),
+        "occurred_at_source": change.occurred_at_source,
+        "detected_at": iso_utc(change.detected_at),
+        "baseline_sha256": change.baseline_sha256,
+        "baseline_match": change.baseline_match,
         "scan_run_id": change.scan_run_id,
         "review_status": change.review_status.value,
         "message": f"Alerta WatchDogs FIM: {change.event_type.value} en {environment_name} - {change.path}",

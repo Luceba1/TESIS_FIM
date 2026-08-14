@@ -64,6 +64,7 @@ function formatStatus(status: string) {
     OK: "Correcto",
     TEST: "Prueba",
     ERROR: "Error",
+    PARTIAL: "Parcial",
   };
   return labels[status] ?? status;
 }
@@ -329,7 +330,13 @@ function App() {
         <StatCard title="Archivos activos" value={metrics?.active_files ?? "-"} icon={<Database />} hint="En línea base" />
         <StatCard title="Eventos hoy" value={metrics?.events_today ?? "-"} icon={<BellRing />} hint={`${metrics?.pending_events ?? 0} pendientes`} />
         <StatCard title="Escaneos hoy" value={metrics?.scans_today ?? "-"} icon={<RefreshCcw />} hint={metrics?.last_scan_status ?? "Sin datos"} />
-        <StatCard title="MTTD promedio" value={formatDuration(metrics?.average_mttd_seconds)} icon={<Clock3 />} hint="Inicio de escaneo → detección" />
+        <StatCard
+          title="MTTD promedio"
+          value={formatDuration(metrics?.average_mttd_seconds)}
+          icon={<Clock3 />}
+          hint={`Evento → detección · n=${metrics?.mttd_sample_count ?? 0}${metrics?.mttd_missing_count ? ` · ${metrics.mttd_missing_count} sin referencia` : ""}`}
+        />
+        <StatCard title="Latencia de escaneo" value={formatDuration(metrics?.average_scan_processing_seconds)} icon={<Activity />} hint="Inicio de ciclo → registro" />
         <StatCard title="MTTR promedio" value={formatDuration(metrics?.average_mttr_seconds)} icon={<CheckCircle2 />} hint="Detección → revisión" />
       </section>
 
@@ -484,6 +491,7 @@ function App() {
                   <strong>{fileName(change.path)}</strong>
                   <small>{formatDate(change.detected_at)}</small>
                   <small>MTTD: {formatDuration(change.detection_time_seconds)}</small>
+                  <small>Fuente: {change.occurred_at_source || "UNKNOWN"}</small>
                 </div>
                 <div>
                   <strong>{change.environment_name}</strong>
@@ -567,10 +575,14 @@ function App() {
             <div className="evidence-grid">
               <div><span>Entorno</span><strong>{selectedChange.environment_name}</strong></div>
               <div><span>Criticidad</span><strong>{selectedChange.environment_criticality}</strong></div>
+              <div><span>Ocurrencia</span><strong>{formatDate(selectedChange.occurred_at)}</strong></div>
+              <div><span>Fuente temporal</span><strong>{selectedChange.occurred_at_source || "UNKNOWN"}</strong></div>
               <div><span>Detectado</span><strong>{formatDate(selectedChange.detected_at)}</strong></div>
               <div><span>Revisado</span><strong>{formatDate(selectedChange.reviewed_at)}</strong></div>
               <div><span>MTTD</span><strong>{formatDuration(selectedChange.detection_time_seconds)}</strong></div>
+              <div><span>Latencia de escaneo</span><strong>{formatDuration(selectedChange.scan_processing_time_seconds)}</strong></div>
               <div><span>MTTR</span><strong>{formatDuration(selectedChange.response_time_seconds)}</strong></div>
+              <div><span>Coincide con baseline</span><strong>{selectedChange.baseline_match === null ? "Sin baseline aprobada" : selectedChange.baseline_match ? "Sí" : "No"}</strong></div>
               <div><span>Scan run</span><strong>#{selectedChange.scan_run_id}</strong></div>
               <div><span>Webhook</span><strong>{formatStatus(selectedChange.webhook_status)}</strong></div>
               <div><span>Tamaño</span><strong>{selectedChange.size_bytes} bytes</strong></div>
@@ -583,7 +595,11 @@ function App() {
 
             <div className="hash-grid">
               <div>
-                <span>SHA-256 anterior</span>
+                <span>SHA-256 baseline aprobada</span>
+                <code title={selectedChange.baseline_sha256}>{shortHash(selectedChange.baseline_sha256)}</code>
+              </div>
+              <div>
+                <span>SHA-256 anterior observado</span>
                 <code title={selectedChange.old_sha256}>{shortHash(selectedChange.old_sha256)}</code>
               </div>
               <div>

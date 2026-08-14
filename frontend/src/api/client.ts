@@ -35,7 +35,10 @@ export type Metrics = {
   last_scan_status: string | null;
   agent_last_seen_at: string | null;
   average_mttd_seconds: number | null;
+  average_scan_processing_seconds: number | null;
   average_mttr_seconds: number | null;
+  mttd_sample_count: number;
+  mttd_missing_count: number;
 };
 
 export type Environment = {
@@ -75,10 +78,16 @@ export type FileChange = {
   new_sha256: string;
   old_md5: string;
   new_md5: string;
+  baseline_sha256: string;
+  baseline_md5: string;
+  baseline_match: boolean | null;
   size_bytes: number;
+  occurred_at: string | null;
+  occurred_at_source: string;
   detected_at: string;
   reviewed_at: string | null;
   detection_time_seconds: number | null;
+  scan_processing_time_seconds: number | null;
   response_time_seconds: number | null;
   review_status: "PENDING" | "REVIEWED" | "IGNORED" | "FALSE_POSITIVE" | string;
   webhook_status: string;

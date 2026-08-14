@@ -29,3 +29,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+# Backups y artefactos locales de compilación
+*.dump
+*.tsbuildinfo
