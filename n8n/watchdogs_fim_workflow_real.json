@@ -8,30 +8,33 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "Webhook",
+      "id": "701b429d-27aa-4b28-a79e-22e47b70e935",
       "name": "WatchDogs Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        300,
-        300
-      ]
+        0,
+        0
+      ],
+      "webhookId": "1ac22671-a1ec-475f-a6a0-19641e4c5599"
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={ { \"ok\": true, \"received\": true, \"source\": $json.source, \"type\": $json.type, \"environment_name\": $json.environment_name || null, \"event_type\": $json.event_type || null, \"message\": $json.message } }"
+        "responseBody": "={\n  \"ok\": true,\n  \"message\": \"Evento recibido por n8n\"\n}",
+        "options": {}
       },
-      "id": "Respond",
+      "id": "a102d86d-dc9e-4163-a644-a9e4560c846b",
       "name": "Responder OK",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        560,
-        300
+        272,
+        0
       ]
     }
   ],
+  "pinData": {},
   "connections": {
     "WatchDogs Webhook": {
       "main": [
@@ -45,7 +48,14 @@
       ]
     }
   },
-  "active": false,
-  "settings": {},
-  "versionId": "sample"
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "726b67c8-05f5-423a-9e8e-5f5d19fbcc46",
+  "nodeGroups": [],
+  "id": "QFUmGqV1tstL8Ytb",
+  "tags": []
 }
