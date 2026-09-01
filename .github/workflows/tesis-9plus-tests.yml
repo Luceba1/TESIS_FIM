@@ -2,11 +2,9 @@ name: Tesis 9+ regression tests
 
 on:
   push:
-    branches:
-      - tesis-9plus-final-pass
+    branches: [tesis-9plus-final-pass]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -18,18 +16,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
-
       - name: Run integrity and metrics regression suites
-        run: |
-          pytest -v tests/test_fim_integrity.py tests/test_metrics_separation.py
+        env:
+          PYTHONPATH: .
+        run: pytest -v tests/test_fim_integrity.py tests/test_metrics_separation.py
