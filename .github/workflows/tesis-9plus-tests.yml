@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - tesis-9plus-final-pass
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
