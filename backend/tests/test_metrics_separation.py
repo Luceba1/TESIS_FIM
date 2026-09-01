@@ -83,6 +83,7 @@ def test_active_files_counts_only_approved_baseline_and_partial_is_visible():
         session.commit()
         session.refresh(monitored)
 
+        observed_at = datetime(2026, 8, 11, 4, 0, 0, tzinfo=timezone.utc)
         session.add(
             FileHash(
                 environment_id=environment.id,
@@ -91,7 +92,14 @@ def test_active_files_counts_only_approved_baseline_and_partial_is_visible():
                 sha256="approved",
                 md5="approved",
                 size_bytes=1,
+                last_modified=observed_at,
                 baseline_approved=True,
+                baseline_approved_at=observed_at,
+                observed_sha256="approved",
+                observed_md5="approved",
+                observed_size_bytes=1,
+                observed_last_modified=observed_at,
+                last_seen_at=observed_at,
                 status=FileStatus.ACTIVE,
             )
         )
@@ -103,9 +111,12 @@ def test_active_files_counts_only_approved_baseline_and_partial_is_visible():
                 sha256="",
                 md5="",
                 size_bytes=0,
+                last_modified=observed_at,
                 observed_sha256="observed",
                 observed_md5="observed",
                 observed_size_bytes=1,
+                observed_last_modified=observed_at,
+                last_seen_at=observed_at,
                 baseline_approved=False,
                 status=FileStatus.ACTIVE,
             )
