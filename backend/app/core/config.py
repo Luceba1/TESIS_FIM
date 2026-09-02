@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     scan_interval_seconds: int = 10
     n8n_webhook_url: str = ""
     auto_start_monitor: bool = True
+    # MD5 es un dato auxiliar y puede deshabilitarse sin afectar el criterio
+    # principal de integridad, que permanece basado en SHA-256.
+    calculate_md5: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
