@@ -2,7 +2,7 @@ name: Tesis 9+ regression tests
 
 on:
   push:
-    branches: [tesis-9plus-final-pass]
+    branches: [tesis-9plus-final-pass, tesis-95-final-residuals]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -28,4 +28,4 @@ jobs:
       - name: Run integrity and metrics regression suites
         env:
           PYTHONPATH: .
-        run: pytest -v tests/test_fim_integrity.py tests/test_metrics_separation.py
+        run: pytest -v tests/test_fim_integrity.py tests/test_metrics_separation.py tests/test_hashing_configuration.py
